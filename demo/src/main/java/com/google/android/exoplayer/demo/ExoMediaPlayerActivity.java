@@ -81,7 +81,7 @@ public class ExoMediaPlayerActivity extends Activity implements
                     /*
                      * TODO: Set the path variable to a local media file path.
                      */
-                    path = "";
+                    path = "/sdcard/videoviewdemo.mp4";
                     if (path == "") {
                         // Tell the user to provide a media file URL.
                         Toast
@@ -182,7 +182,8 @@ public class ExoMediaPlayerActivity extends Activity implements
 
     public void surfaceCreated(SurfaceHolder holder) {
         Log.d(TAG, "surfaceCreated called");
-        playVideo(extras.getInt(MEDIA));
+        //playVideo(extras.getInt(MEDIA));
+        playVideo(LOCAL_VIDEO);
 
 
     }
