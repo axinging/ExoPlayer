@@ -14,7 +14,7 @@ import android.view.Surface;
 import com.google.android.exoplayer.CodecCounters;
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
-import com.google.android.exoplayer.ExoPlayerImplInternal;
+//import com.google.android.exoplayer.ExoPlayerImplInternal;
 import com.google.android.exoplayer.ExoPlayerLibraryInfo;
 import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
 import com.google.android.exoplayer.MediaFormat;
@@ -55,37 +55,7 @@ public class ExoMediaPlayer extends DemoPlayer {
     //MediaPlayer like API
     /*
     public void setSurface(Surface surface) {
-        this.surface = surface;
-        pushSurface(false);
-    }
-
-    private void pushSurface(boolean blockForSurfacePush) {
-        if (videoRenderer == null) {
-            return;
-        }
-
-        if (blockForSurfacePush) {
-            exoPlayer.blockingSendMessage(
-                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
-        } else {
-            exoPlayer.sendMessage(
-                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
-        }
-    }
-    */
-
-    /*
     public void prepare() {
-        if (rendererBuildingState == RENDERER_BUILDING_STATE_BUILT) {
-            player.stop();
-        }
-        rendererBuilder.cancel();
-        videoFormat = null;
-        videoRenderer = null;
-        rendererBuildingState = RENDERER_BUILDING_STATE_BUILDING;
-        maybeReportPlayerState();
-        rendererBuilder.buildRenderers(this);
-    }
     */
 
     public void prepareAsync() throws IllegalStateException {
@@ -94,8 +64,9 @@ public class ExoMediaPlayer extends DemoPlayer {
 
     public boolean isPlaying() {
         //TODO
+        return false;
     }
-
+    /*
     private Vector<Pair<Integer, SubtitleTrack>> mIndexTrackPairs = new Vector<>();
     private BitSet mInbandTrackIndices = new BitSet();
 
@@ -111,14 +82,14 @@ public class ExoMediaPlayer extends DemoPlayer {
                     allTrackInfo[i] = trackInfo[p.first];
                 } else {
                     SubtitleTrack track = p.second;
-                    allTrackInfo[i] = new TrackInfo(track.getTrackType(), track.getFormat());
+                    allTrackInfo[i] = new MediaPlayer.TrackInfo(track.getTrackType(), track.getFormat());
                 }
             }
             return allTrackInfo;
         }
     }
 
-    private TrackInfo[] getInbandTrackInfo() throws IllegalStateException {
+    private MediaPlayer.TrackInfo[] getInbandTrackInfo() throws IllegalStateException {
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         try {
@@ -132,6 +103,7 @@ public class ExoMediaPlayer extends DemoPlayer {
             reply.recycle();
         }
     }
+    */
 
 
     public int getVideoWidth() {
@@ -264,7 +236,6 @@ public class ExoMediaPlayer extends DemoPlayer {
      */
     public void setOnCompletionListener(OnCompletionListener listener) {
         mOnCompletionListener = listener;
-        getExoPlayer().setOnCompletionListener(listener);
     }
 
 
@@ -409,6 +380,7 @@ public class ExoMediaPlayer extends DemoPlayer {
      * // FIXME: unhide.
      * {@hide}
      */
+    /*
     public Metadata getMetadata(final boolean update_only,
                                 final boolean apply_filter) {
         Parcel reply = Parcel.obtain();
@@ -417,5 +389,6 @@ public class ExoMediaPlayer extends DemoPlayer {
 
         return data;
     }
+    */
 
 }

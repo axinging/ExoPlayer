@@ -43,7 +43,7 @@ public class ExoMediaPlayerActivity extends Activity implements
     private static final String TAG = "MediaPlayerDemo";
     private int mVideoWidth;
     private int mVideoHeight;
-    private ExoMediaPlayer mMediaPlayer;//Replaced with MediaPlayer
+    private MediaPlayer mMediaPlayer;//Replaced with MediaPlayer
     private SurfaceView mPreview;
     private SurfaceHolder holder;
     private String path;
@@ -125,6 +125,7 @@ public class ExoMediaPlayerActivity extends Activity implements
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setDataSource(path);
             mMediaPlayer.setDisplay(holder);
+            //mMediaPlayer.setSurface(holder.getSurface());
             mMediaPlayer.prepare();
             mMediaPlayer.setOnBufferingUpdateListener(this);
             mMediaPlayer.setOnCompletionListener(this);
