@@ -38,7 +38,7 @@ import android.widget.MediaController;
 import android.widget.Toast;
 
 import com.google.android.exoplayer.demo.player.DashRendererBuilder;
-import com.google.android.exoplayer.demo.player.DemoPlayer;
+//import com.google.android.exoplayer.demo.player.DemoPlayer;
 import com.google.android.exoplayer.demo.player.ExoMediaPlayer;
 import com.google.android.exoplayer.demo.player.ExtractorRendererBuilder;
 import com.google.android.exoplayer.demo.player.HlsRendererBuilder;
@@ -151,7 +151,7 @@ public class ExoMediaPlayerActivity extends Activity implements
         player.setPlayWhenReady(playWhenReady);
     }
     */
-    private DemoPlayer.RendererBuilder getRendererBuilder() {
+    private ExoMediaPlayer.RendererBuilder getRendererBuilder() {
         String userAgent = Util.getUserAgent(this, "ExoPlayerDemo");
         switch (contentType) {
             case Util.TYPE_SS:

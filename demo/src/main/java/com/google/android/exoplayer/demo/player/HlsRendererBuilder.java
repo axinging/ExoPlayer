@@ -23,7 +23,7 @@ import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
 import com.google.android.exoplayer.SampleSource;
 import com.google.android.exoplayer.TrackRenderer;
 import com.google.android.exoplayer.audio.AudioCapabilities;
-import com.google.android.exoplayer.demo.player.DemoPlayer.RendererBuilder;
+import com.google.android.exoplayer.demo.player.ExoMediaPlayer.RendererBuilder;
 import com.google.android.exoplayer.hls.DefaultHlsTrackSelector;
 import com.google.android.exoplayer.hls.HlsChunkSource;
 import com.google.android.exoplayer.hls.HlsMasterPlaylist;
@@ -74,7 +74,7 @@ public class HlsRendererBuilder implements RendererBuilder {
   }
 
   @Override
-  public void buildRenderers(DemoPlayer player) {
+  public void buildRenderers(ExoMediaPlayer player) {
     currentAsyncBuilder = new AsyncRendererBuilder(context, userAgent, url, player);
     currentAsyncBuilder.init();
   }
@@ -92,12 +92,12 @@ public class HlsRendererBuilder implements RendererBuilder {
     private final Context context;
     private final String userAgent;
     private final String url;
-    private final DemoPlayer player;
+    private final ExoMediaPlayer player;
     private final ManifestFetcher<HlsPlaylist> playlistFetcher;
 
     private boolean canceled;
 
-    public AsyncRendererBuilder(Context context, String userAgent, String url, DemoPlayer player) {
+    public AsyncRendererBuilder(Context context, String userAgent, String url, ExoMediaPlayer player) {
       this.context = context;
       this.userAgent = userAgent;
       this.url = url;
