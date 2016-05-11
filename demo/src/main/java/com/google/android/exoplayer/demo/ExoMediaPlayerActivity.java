@@ -22,9 +22,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnBufferingUpdateListener;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnPreparedListener;
+//import android.media.MediaPlayer.OnBufferingUpdateListener;
+//import android.media.MediaPlayer.OnCompletionListener;
+//import android.media.MediaPlayer.OnPreparedListener;
 //import android.media.MediaPlayer.OnVideoSizeChangedListener;
 import android.net.Uri;
 import android.os.Bundle;
@@ -46,9 +46,9 @@ import com.google.android.exoplayer.demo.player.SmoothStreamingRendererBuilder;
 import com.google.android.exoplayer.util.DebugTextViewHelper;
 import com.google.android.exoplayer.util.Util;
 
-//import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnBufferingUpdateListener;
-//import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnCompletionListener;
-//import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnPreparedListener;
+import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnBufferingUpdateListener;
+import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnCompletionListener;
+import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnPreparedListener;
 import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnVideoSizeChangedListener;
 
 
@@ -122,54 +122,6 @@ public class ExoMediaPlayerActivity extends Activity implements
 
 
     }
-    /*
-
-    private void preparePlayer(boolean playWhenReady) {
-        if (player == null) {
-            player = new DemoPlayer(getRendererBuilder());
-            player.addListener(this);
-            player.setCaptionListener(this);
-            player.setMetadataListener(this);
-            player.seekTo(playerPosition);
-            playerNeedsPrepare = true;
-            mediaController.setMediaPlayer(player.getPlayerControl());
-            mediaController.setEnabled(true);
-            eventLogger = new EventLogger();
-            eventLogger.startSession();
-            player.addListener(eventLogger);
-            player.setInfoListener(eventLogger);
-            player.setInternalErrorListener(eventLogger);
-            debugViewHelper = new DebugTextViewHelper(player, debugTextView);
-            debugViewHelper.start();
-        }
-        if (playerNeedsPrepare) {
-            player.prepare();
-            playerNeedsPrepare = false;
-            updateButtonVisibilities();
-        }
-        player.setSurface(surfaceView.getHolder().getSurface());
-        player.setPlayWhenReady(playWhenReady);
-    }
-    */
-    private ExoMediaPlayer.RendererBuilder getRendererBuilder() {
-        String userAgent = Util.getUserAgent(this, "ExoPlayerDemo");
-        switch (contentType) {
-            case Util.TYPE_SS:
-                return new SmoothStreamingRendererBuilder(this, userAgent, contentUri.toString(),
-                        new SmoothStreamingTestMediaDrmCallback());
-            /*
-            case Util.TYPE_DASH:
-                return new DashRendererBuilder(this, userAgent, contentUri.toString(),
-                        new WidevineTestMediaDrmCallback(contentId, provider));
-            */
-            case Util.TYPE_HLS:
-                return new HlsRendererBuilder(this, userAgent, contentUri.toString());
-            case Util.TYPE_OTHER:
-                return new ExtractorRendererBuilder(this, userAgent, contentUri);
-            default:
-                throw new IllegalStateException("Unsupported type: " + contentType);
-        }
-    }
 
     private void playVideo(Integer Media) {
         doCleanUp();
@@ -221,22 +173,24 @@ public class ExoMediaPlayerActivity extends Activity implements
             }
 
             // Create a new media player and set the listeners
-            mMediaPlayer = new ExoMediaPlayer(getRendererBuilder());
+            mMediaPlayer = new ExoMediaPlayer();
             //mMediaPlayer.setDataSource(path);
             //mMediaPlayer.setDisplay(holder);
-            mMediaPlayer.setOnVideoSizeChangedListener(this);
-            mMediaPlayer.setSurface(holder.getSurface());
 
+            mMediaPlayer.setSurface(holder.getSurface());
+            mMediaPlayer.setSurface(holder.getSurface());
+            mMediaPlayer.setDataSource(this, Uri.parse("http://html5demos.com/assets/dizzy.mp4"), null);
             mediaController.setMediaPlayer(mMediaPlayer.getPlayerControl());
             mediaController.setEnabled(true);
             mMediaPlayer.prepare();
-            /*
+
+
             mMediaPlayer.setOnBufferingUpdateListener(this);
             mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnVideoSizeChangedListener(this);
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            */
+            //mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            
 
 
         } catch (Exception e) {
@@ -256,16 +210,18 @@ public class ExoMediaPlayerActivity extends Activity implements
         mediaController.show(0);
     }
 
-
-    public void onBufferingUpdate(MediaPlayer arg0, int percent) {
+    @Override
+    public void onBufferingUpdate(ExoMediaPlayer arg0, int percent) {
         Log.d(TAG, "onBufferingUpdate percent:" + percent);
 
     }
 
-    public void onCompletion(MediaPlayer arg0) {
+    @Override
+    public void onCompletion(ExoMediaPlayer arg0) {
         Log.d(TAG, "onCompletion called");
     }
 
+    @Override
     public void onVideoSizeChanged(ExoMediaPlayer mp, int width, int height) {
         //Log.v(TAG, "onVideoSizeChanged called");
 		Log.e(TAG, "ExoMediaPlayer::onVideoSizeChanged called video width(" + width + ") or height(" + height + ")");
@@ -276,12 +232,13 @@ public class ExoMediaPlayerActivity extends Activity implements
         mIsVideoSizeKnown = true;
         mVideoWidth = width;
         mVideoHeight = height;
+        //startVideoPlayback();
         if (mIsVideoReadyToBePlayed && mIsVideoSizeKnown) {
             startVideoPlayback();
         }
     }
-
-    public void onPrepared(MediaPlayer mediaplayer) {
+    @Override
+    public void onPrepared(ExoMediaPlayer mediaplayer) {
         Log.d(TAG, "onPrepared called");
         mIsVideoReadyToBePlayed = true;
         if (mIsVideoReadyToBePlayed && mIsVideoSizeKnown) {
@@ -303,8 +260,6 @@ public class ExoMediaPlayerActivity extends Activity implements
         Log.d(TAG, "surfaceCreated called");
         //playVideo(extras.getInt(MEDIA));
         playVideo(LOCAL_VIDEO);
-
-
     }
 
     @Override

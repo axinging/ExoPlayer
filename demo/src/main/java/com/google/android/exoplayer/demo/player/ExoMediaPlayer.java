@@ -29,6 +29,7 @@ import com.google.android.exoplayer.audio.AudioTrack;
 import com.google.android.exoplayer.chunk.ChunkSampleSource;
 import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.dash.DashChunkSource;
+import com.google.android.exoplayer.demo.SmoothStreamingTestMediaDrmCallback;
 import com.google.android.exoplayer.drm.StreamingDrmSessionManager;
 import com.google.android.exoplayer.extractor.ExtractorSampleSource;
 import com.google.android.exoplayer.hls.HlsSampleSource;
@@ -40,6 +41,7 @@ import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.util.DebugTextViewHelper;
 import com.google.android.exoplayer.util.PlayerControl;
+import com.google.android.exoplayer.util.Util;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -174,7 +176,7 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
     private static final int RENDERER_BUILDING_STATE_BUILDING = 2;
     private static final int RENDERER_BUILDING_STATE_BUILT = 3;
 
-    private final RendererBuilder rendererBuilder;
+    private RendererBuilder rendererBuilder = null;
     private final ExoPlayer player;
     private final PlayerControl playerControl;
     private final Handler mainHandler;
@@ -184,6 +186,7 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
     private int lastReportedPlaybackState;
     private boolean lastReportedPlayWhenReady;
 
+    private Context context;
     private Surface surface;
     private TrackRenderer videoRenderer;
     private CodecCounters codecCounters;
@@ -198,6 +201,19 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
     private InternalErrorListener internalErrorListener;
     private InfoListener infoListener;
 
+
+
+    private static final int LOCAL_AUDIO = 1;
+    private static final int STREAM_AUDIO = 2;
+    private static final int RESOURCES_AUDIO = 3;
+    private static final int LOCAL_VIDEO = 4;
+    private static final int STREAM_VIDEO = 5;
+    private boolean mIsVideoSizeKnown = false;
+    private boolean mIsVideoReadyToBePlayed = false;
+    private Uri contentUri = Uri.parse("http://html5demos.com/assets/dizzy.mp4");
+
+    private int contentType = Util.TYPE_OTHER;
+    private String contentId;
     //MediaPlayer like API
     /*
     public void setSurface(Surface surface) {
@@ -209,8 +225,7 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
     }
 
     public boolean isPlaying() {
-        //TODO
-        return false;
+        return player.getPlayWhenReady();
     }
     /*
     private Vector<Pair<Integer, SubtitleTrack>> mIndexTrackPairs = new Vector<>();
@@ -251,6 +266,40 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
     }
     */
 
+
+    public ExoMediaPlayer() {
+        //rendererBuilder = getRendererBuilder(context);
+        //rendererBuilder = null;
+        player = ExoPlayer.Factory.newInstance(RENDERER_COUNT, 1000, 5000);
+        player.addListener(this);
+        playerControl = new PlayerControl(player);
+        mainHandler = new Handler();
+        listeners = new CopyOnWriteArrayList<>();
+        lastReportedPlaybackState = STATE_IDLE;
+        rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
+        // Disable text initially.
+        player.setSelectedTrack(TYPE_TEXT, TRACK_DISABLED);
+    }
+
+    private ExoMediaPlayer.RendererBuilder getRendererBuilder(Context context) {
+        String userAgent = Util.getUserAgent(context, "ExoPlayerDemo");
+        switch (contentType) {
+            case Util.TYPE_SS:
+                return new SmoothStreamingRendererBuilder(context, userAgent, contentUri.toString(),
+                        new SmoothStreamingTestMediaDrmCallback());
+            /*
+            case Util.TYPE_DASH:
+                return new DashRendererBuilder(this, userAgent, contentUri.toString(),
+                        new WidevineTestMediaDrmCallback(contentId, provider));
+            */
+            case Util.TYPE_HLS:
+                return new HlsRendererBuilder(context, userAgent, contentUri.toString());
+            case Util.TYPE_OTHER:
+                return new ExtractorRendererBuilder(context, userAgent, contentUri);
+            default:
+                throw new IllegalStateException("Unsupported type: " + contentType);
+        }
+    }
 
     public int getVideoWidth() {
         return getFormat().width;
@@ -320,7 +369,8 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
     public void setDataSource(Context context, Uri uri, Map<String, String> headers)
             throws IOException, IllegalArgumentException, SecurityException, IllegalStateException
     {
-
+        this.context = context;
+        contentUri = uri;
     }
 
     public void setDataSource(Context context, Uri uri)
@@ -552,18 +602,6 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
     ////////////////////////////////////////////////////////////////
 
 
-    public ExoMediaPlayer(RendererBuilder rendererBuilder) {
-        this.rendererBuilder = rendererBuilder;
-        player = ExoPlayer.Factory.newInstance(RENDERER_COUNT, 1000, 5000);
-        player.addListener(this);
-        playerControl = new PlayerControl(player);
-        mainHandler = new Handler();
-        listeners = new CopyOnWriteArrayList<>();
-        lastReportedPlaybackState = STATE_IDLE;
-        rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
-        // Disable text initially.
-        player.setSelectedTrack(TYPE_TEXT, TRACK_DISABLED);
-    }
 
     public PlayerControl getPlayerControl() {
         return playerControl;
@@ -648,6 +686,7 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
         if (rendererBuildingState == RENDERER_BUILDING_STATE_BUILT) {
             player.stop();
         }
+        rendererBuilder = getRendererBuilder(context);
         rendererBuilder.cancel();
         videoFormat = null;
         videoRenderer = null;
@@ -947,7 +986,45 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
             lastReportedPlayWhenReady = playWhenReady;
             lastReportedPlaybackState = playbackState;
         }
+		onStateChanged(playWhenReady, playbackState);
     }
+	// DemoPlayer.Listener implementation
+	
+	private void onStateChanged(boolean playWhenReady, int playbackState) {
+	  if (playbackState == ExoPlayer.STATE_ENDED) {
+		//showControls(0);
+	  }
+	  String text = "playWhenReady=" + playWhenReady + ", playbackState=";
+	  switch(playbackState) {
+		case ExoPlayer.STATE_BUFFERING:
+		  text += "buffering";
+		  if (mOnBufferingUpdateListener == null) return;
+		  Log.i(TAG,"ExoMediaPlayer::onStateChanged  getBufferedPosition="+player.getBufferedPosition()+",getDuration="+player.getDuration());
+            mOnBufferingUpdateListener.onBufferingUpdate(this, (int)player.getBufferedPosition());
+		  break;
+		case ExoPlayer.STATE_ENDED:
+		  text += "ended";
+		  mOnCompletionListener.onCompletion(this);
+		  break;
+		case ExoPlayer.STATE_IDLE:
+		  text += "idle";
+		  break;
+		case ExoPlayer.STATE_PREPARING:
+		  text += "preparing";
+            if (mOnBufferingUpdateListener == null) return;
+            mOnPreparedListener.onPrepared(this);
+		  break;
+		case ExoPlayer.STATE_READY:
+		  text += "ready";
+		  break;
+		default:
+		  text += "unknown";
+		  break;
+	  }
+	  //playerStateTextView.setText(text);
+	  //updateButtonVisibilities();
+	}
+
 
     private void pushSurface(boolean blockForSurfacePush) {
         if (videoRenderer == null) {
