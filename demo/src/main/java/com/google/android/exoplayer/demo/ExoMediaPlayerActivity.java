@@ -1,11 +1,6 @@
-package com.google.android.exoplayer.demo;
-
 /**
  * Created by xxu42 on 16-5-10.
  */
-//public class  {
-//}
-
 /*
  * Copyright (C) 2009 The Android Open Source Project
  *
@@ -21,20 +16,42 @@ package com.google.android.exoplayer.demo;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.google.android.exoplayer.demo;
 
 import android.app.Activity;
+import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnBufferingUpdateListener;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnPreparedListener;
-import android.media.MediaPlayer.OnVideoSizeChangedListener;
+//import android.media.MediaPlayer.OnVideoSizeChangedListener;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.MediaController;
 import android.widget.Toast;
+
+import com.google.android.exoplayer.demo.player.DashRendererBuilder;
+import com.google.android.exoplayer.demo.player.DemoPlayer;
 import com.google.android.exoplayer.demo.player.ExoMediaPlayer;
+import com.google.android.exoplayer.demo.player.ExtractorRendererBuilder;
+import com.google.android.exoplayer.demo.player.HlsRendererBuilder;
+import com.google.android.exoplayer.demo.player.SmoothStreamingRendererBuilder;
+import com.google.android.exoplayer.util.DebugTextViewHelper;
+import com.google.android.exoplayer.util.Util;
+
+//import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnBufferingUpdateListener;
+//import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnCompletionListener;
+//import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnPreparedListener;
+import com.google.android.exoplayer.demo.player.ExoMediaPlayer.OnVideoSizeChangedListener;
+
+
 
 public class ExoMediaPlayerActivity extends Activity implements
         OnBufferingUpdateListener, OnCompletionListener,
@@ -43,8 +60,9 @@ public class ExoMediaPlayerActivity extends Activity implements
     private static final String TAG = "MediaPlayerDemo";
     private int mVideoWidth;
     private int mVideoHeight;
-    private MediaPlayer mMediaPlayer;//Replaced with
+    private ExoMediaPlayer mMediaPlayer;//Replaced with
     // MediaPlayer
+    private MediaController mediaController;
     private SurfaceView mPreview;
     private SurfaceHolder holder;
     private String path;
@@ -57,7 +75,12 @@ public class ExoMediaPlayerActivity extends Activity implements
     private static final int STREAM_VIDEO = 5;
     private boolean mIsVideoSizeKnown = false;
     private boolean mIsVideoReadyToBePlayed = false;
+    private Uri contentUri = Uri.parse("http://html5demos.com/assets/dizzy.mp4");
 
+    private int contentType = Util.TYPE_OTHER;
+    private String contentId;
+
+    View root;
     /**
      * Called when the activity is first created.
      */
@@ -65,12 +88,87 @@ public class ExoMediaPlayerActivity extends Activity implements
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setContentView(R.layout.exo_mediaplayer);
+        View root = findViewById(R.id.root);
+        root.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    toggleControlsVisibility();
+                } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                    view.performClick();
+                }
+                return true;
+            }
+        });
+        root.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_ESCAPE
+                        || keyCode == KeyEvent.KEYCODE_MENU) {
+                    return false;
+                }
+                return mediaController.dispatchKeyEvent(event);
+            }
+        });
+
         mPreview = (SurfaceView) findViewById(R.id.surface);
         holder = mPreview.getHolder();
         holder.addCallback(this);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         extras = getIntent().getExtras();
 
+        mediaController = new KeyCompatibleMediaController(this);
+        mediaController.setAnchorView(root);
+
+
+    }
+    /*
+
+    private void preparePlayer(boolean playWhenReady) {
+        if (player == null) {
+            player = new DemoPlayer(getRendererBuilder());
+            player.addListener(this);
+            player.setCaptionListener(this);
+            player.setMetadataListener(this);
+            player.seekTo(playerPosition);
+            playerNeedsPrepare = true;
+            mediaController.setMediaPlayer(player.getPlayerControl());
+            mediaController.setEnabled(true);
+            eventLogger = new EventLogger();
+            eventLogger.startSession();
+            player.addListener(eventLogger);
+            player.setInfoListener(eventLogger);
+            player.setInternalErrorListener(eventLogger);
+            debugViewHelper = new DebugTextViewHelper(player, debugTextView);
+            debugViewHelper.start();
+        }
+        if (playerNeedsPrepare) {
+            player.prepare();
+            playerNeedsPrepare = false;
+            updateButtonVisibilities();
+        }
+        player.setSurface(surfaceView.getHolder().getSurface());
+        player.setPlayWhenReady(playWhenReady);
+    }
+    */
+    private DemoPlayer.RendererBuilder getRendererBuilder() {
+        String userAgent = Util.getUserAgent(this, "ExoPlayerDemo");
+        switch (contentType) {
+            case Util.TYPE_SS:
+                return new SmoothStreamingRendererBuilder(this, userAgent, contentUri.toString(),
+                        new SmoothStreamingTestMediaDrmCallback());
+            /*
+            case Util.TYPE_DASH:
+                return new DashRendererBuilder(this, userAgent, contentUri.toString(),
+                        new WidevineTestMediaDrmCallback(contentId, provider));
+            */
+            case Util.TYPE_HLS:
+                return new HlsRendererBuilder(this, userAgent, contentUri.toString());
+            case Util.TYPE_OTHER:
+                return new ExtractorRendererBuilder(this, userAgent, contentUri);
+            default:
+                throw new IllegalStateException("Unsupported type: " + contentType);
+        }
     }
 
     private void playVideo(Integer Media) {
@@ -123,22 +221,41 @@ public class ExoMediaPlayerActivity extends Activity implements
             }
 
             // Create a new media player and set the listeners
-            mMediaPlayer = new MediaPlayer();
-            mMediaPlayer.setDataSource(path);
+            mMediaPlayer = new ExoMediaPlayer(getRendererBuilder());
+            //mMediaPlayer.setDataSource(path);
             //mMediaPlayer.setDisplay(holder);
+            mMediaPlayer.setOnVideoSizeChangedListener(this);
             mMediaPlayer.setSurface(holder.getSurface());
+
+            mediaController.setMediaPlayer(mMediaPlayer.getPlayerControl());
+            mediaController.setEnabled(true);
             mMediaPlayer.prepare();
+            /*
             mMediaPlayer.setOnBufferingUpdateListener(this);
             mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnVideoSizeChangedListener(this);
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            */
 
 
         } catch (Exception e) {
             Log.e(TAG, "error: " + e.getMessage(), e);
         }
     }
+
+    private void toggleControlsVisibility()  {
+        if (mediaController.isShowing()) {
+            mediaController.hide();
+        } else {
+            showControls();
+        }
+    }
+
+    private void showControls() {
+        mediaController.show(0);
+    }
+
 
     public void onBufferingUpdate(MediaPlayer arg0, int percent) {
         Log.d(TAG, "onBufferingUpdate percent:" + percent);
@@ -149,8 +266,9 @@ public class ExoMediaPlayerActivity extends Activity implements
         Log.d(TAG, "onCompletion called");
     }
 
-    public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
-        Log.v(TAG, "onVideoSizeChanged called");
+    public void onVideoSizeChanged(ExoMediaPlayer mp, int width, int height) {
+        //Log.v(TAG, "onVideoSizeChanged called");
+		Log.e(TAG, "ExoMediaPlayer::onVideoSizeChanged called video width(" + width + ") or height(" + height + ")");
         if (width == 0 || height == 0) {
             Log.e(TAG, "invalid video width(" + width + ") or height(" + height + ")");
             return;
@@ -222,5 +340,41 @@ public class ExoMediaPlayerActivity extends Activity implements
         holder.setFixedSize(mVideoWidth, mVideoHeight);
         mMediaPlayer.start();
     }
+
+    private static final class KeyCompatibleMediaController extends MediaController {
+
+        private MediaController.MediaPlayerControl playerControl;
+
+        public KeyCompatibleMediaController(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void setMediaPlayer(MediaController.MediaPlayerControl playerControl) {
+            super.setMediaPlayer(playerControl);
+            this.playerControl = playerControl;
+        }
+
+        @Override
+        public boolean dispatchKeyEvent(KeyEvent event) {
+            int keyCode = event.getKeyCode();
+            if (playerControl.canSeekForward() && keyCode == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    playerControl.seekTo(playerControl.getCurrentPosition() + 15000); // milliseconds
+                    show();
+                }
+                return true;
+            } else if (playerControl.canSeekBackward() && keyCode == KeyEvent.KEYCODE_MEDIA_REWIND) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    playerControl.seekTo(playerControl.getCurrentPosition() - 5000); // milliseconds
+                    show();
+                }
+                return true;
+            }
+            return super.dispatchKeyEvent(event);
+        }
+    }
+
+
 }
 

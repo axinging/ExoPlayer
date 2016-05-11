@@ -158,7 +158,7 @@ public class ExoMediaPlayer extends DemoPlayer {
     }
 
 
-    void start() throws IllegalStateException {
+    public void start() throws IllegalStateException {
         exoPlayer.setPlayWhenReady(true);
     }
 
@@ -207,7 +207,7 @@ public class ExoMediaPlayer extends DemoPlayer {
          * @param percent the percentage (0-100) of the content
          *                that has been buffered or played thus far
          */
-        void onBufferingUpdate(MediaPlayer mp, int percent);
+        void onBufferingUpdate(ExoMediaPlayer mp, int percent);
     }
 
     /**
@@ -230,9 +230,9 @@ public class ExoMediaPlayer extends DemoPlayer {
         /**
          * Called when the end of a media source is reached during playback.
          *
-         * @param mp the MediaPlayer that reached the end of the file
+         * @param mp the ExoMediaPlayer that reached the end of the file
          */
-        void onCompletion(MediaPlayer mp);
+        void onCompletion(ExoMediaPlayer mp);
     }
 
     /**
@@ -257,7 +257,7 @@ public class ExoMediaPlayer extends DemoPlayer {
         /**
          * Called to indicate an error.
          *
-         * @param mp    the MediaPlayer the error pertains to
+         * @param mp    the ExoMediaPlayer the error pertains to
          * @param what  the type of error that has occurred:
          *              <ul>
          *              <li>{@link #MEDIA_ERROR_UNKNOWN}
@@ -276,7 +276,7 @@ public class ExoMediaPlayer extends DemoPlayer {
          * Returning false, or not having an OnErrorListener at all, will
          * cause the OnCompletionListener to be called.
          */
-        boolean onError(MediaPlayer mp, int what, int extra);
+        boolean onError(ExoMediaPlayer mp, int what, int extra);
     }
 
     /**
@@ -300,9 +300,9 @@ public class ExoMediaPlayer extends DemoPlayer {
         /**
          * Called when the media file is ready for playback.
          *
-         * @param mp the MediaPlayer that is ready for playback
+         * @param mp the ExoMediaPlayer that is ready for playback
          */
-        void onPrepared(MediaPlayer mp);
+        void onPrepared(ExoMediaPlayer mp);
     }
 
     /**
@@ -325,9 +325,9 @@ public class ExoMediaPlayer extends DemoPlayer {
         /**
          * Called to indicate the completion of a seek operation.
          *
-         * @param mp the MediaPlayer that issued the seek operation
+         * @param mp the ExoMediaPlayer that issued the seek operation
          */
-        public void onSeekComplete(MediaPlayer mp);
+        public void onSeekComplete(ExoMediaPlayer mp);
     }
 
     /**
@@ -353,11 +353,11 @@ public class ExoMediaPlayer extends DemoPlayer {
          * The video size (width and height) could be 0 if there was no video,
          * no display surface was set, or the value was not determined yet.
          *
-         * @param mp     the MediaPlayer associated with this callback
+         * @param mp     the ExoMediaPlayer associated with this callback
          * @param width  the width of the video
          * @param height the height of the video
          */
-        public void onVideoSizeChanged(MediaPlayer mp, int width, int height);
+        public void onVideoSizeChanged(ExoMediaPlayer mp, int width, int height);
     }
 
     /**
@@ -371,6 +371,34 @@ public class ExoMediaPlayer extends DemoPlayer {
     }
 
     private OnVideoSizeChangedListener mOnVideoSizeChangedListener;
+
+	@Override
+	public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
+		float pixelWidthHeightRatio) {
+	  //for (Listener listener : listeners) {
+		//listener.onVideoSizeChanged(width, height, unappliedRotationDegrees, pixelWidthHeightRatio);
+	  //}
+	  if (mOnVideoSizeChangedListener == null) {
+		return;
+	  }	  
+	  mOnVideoSizeChangedListener.onVideoSizeChanged(this, width, height);
+	}
+
+
+    /*
+	@Override
+	public void onDownstreamFormatChanged(int sourceId, Format format, int trigger,
+		long mediaTimeMs) {
+	  if (mOnVideoSizeChangedListener == null) {
+		return;
+	  }
+	  if (sourceId == TYPE_VIDEO) {
+		mOnVideoSizeChangedListener(this, format.width, format.height);
+	  }
+
+	}
+	*/
+
 
 
     /**
