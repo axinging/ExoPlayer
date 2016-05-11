@@ -51,7 +51,9 @@ public class ExoMediaPlayer extends DemoPlayer {
         super(rendererBuilder); //TODO
     }
 
-
+    public ExoMediaPlayer( ) {
+        super(null); //TODO
+    }
     //MediaPlayer like API
     /*
     public void setSurface(Surface surface) {
@@ -155,21 +157,26 @@ public class ExoMediaPlayer extends DemoPlayer {
         setVolume(volume, volume);
     }
 
-    public void start() throws IllegalStateException {
 
+    void start() throws IllegalStateException {
+        exoPlayer.setPlayWhenReady(true);
     }
 
     public void pause() throws IllegalStateException {
-
+        exoPlayer.setPlayWhenReady(false);
     }
 
     public void seekTo(int msec) throws IllegalStateException {
-        super.seekTo((long) msec);
+        //super.seekTo((long) msec);
+        long seekPosition = exoPlayer.getDuration() == ExoPlayer.UNKNOWN_TIME ? 0
+            : Math.min(Math.max(0, msec), getDuration());
+        exoPlayer.seekTo(seekPosition);
 
     }
 
     public void setDataSource(Context context, Uri uri, Map<String, String> headers)
-            throws IOException, IllegalArgumentException, SecurityException, IllegalStateException {
+            throws IOException, IllegalArgumentException, SecurityException, IllegalStateException
+    {
 
     }
 
