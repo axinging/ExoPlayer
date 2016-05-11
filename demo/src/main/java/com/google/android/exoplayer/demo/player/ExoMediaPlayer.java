@@ -455,7 +455,7 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
          * Returning false, or not having an OnErrorListener at all, will
          * cause the OnCompletionListener to be called.
          */
-        boolean onError(ExoMediaPlayer mp, int what, int extra);
+        boolean onError(ExoMediaPlayer mp, int what, int extra); //TODO
     }
 
     /**
@@ -506,7 +506,7 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
          *
          * @param mp the ExoMediaPlayer that issued the seek operation
          */
-        public void onSeekComplete(ExoMediaPlayer mp);
+        public void onSeekComplete(ExoMediaPlayer mp);//TODO
     }
 
     /**
@@ -599,8 +599,7 @@ public class ExoMediaPlayer extends ExoMediaPlayerInterface implements ExoPlayer
     }
     */
 
-    ////////////////////////////////////////////////////////////////
-
+    /*Below is copy from DemoPlayer*/
 
 
     public PlayerControl getPlayerControl() {

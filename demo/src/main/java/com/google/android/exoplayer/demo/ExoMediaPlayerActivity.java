@@ -190,7 +190,7 @@ public class ExoMediaPlayerActivity extends Activity implements
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnVideoSizeChangedListener(this);
             //mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            
+
 
 
         } catch (Exception e) {
